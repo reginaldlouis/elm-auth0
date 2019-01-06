@@ -1,18 +1,23 @@
 module Auth0 exposing
-    ( Audience(..)
-    , ClientId(..)
-    , Config(..)
-    , Connection(..)
-    , Nonce(..)
-    , Prompt(..)
-    , RedirectUri(..)
-    , ResponseType(..)
-    , Scope(..)
-    , State(..)
-    , authorize
-    , config
-    , parseCallbackUrl
+    ( Audience(..), ClientId(..), Config(..), Connection(..), Nonce(..), Prompt(..), RedirectUri(..)
+    , ResponseType(..), Scope(..), State(..), authorize, config
+    , CallbackInfo, parseCallbackUrl
     )
+
+{-|
+
+
+# Login/Authorization
+
+@docs Audience, ClientId, Config, Connection, Nonce, Prompt, RedirectUri
+@docs ResponseType, Scope, State, authorize, config
+
+
+# Callback URL parsing
+
+@docs CallbackInfo, parseCallbackUrl
+
+-}
 
 import Array
 import Url exposing (Url)
@@ -20,6 +25,7 @@ import Url.Builder
 import Url.Extra
 
 
+{-| -}
 type Config
     = Config
         { baseUrl : String
@@ -27,44 +33,55 @@ type Config
         }
 
 
+{-| -}
 type Audience
     = Audience String
 
 
+{-| -}
 type Scope
     = Scope String
 
 
+{-| -}
 type ResponseType
-    = Code -- For server side flow
-    | Token -- For application side flow
+    = Code
+    | Token
     | IdToken
 
 
+{-| -}
 type ClientId
     = ClientId String
 
 
+{-| -}
 type State
     = State String
 
 
+{-| -}
 type RedirectUri
     = RedirectUri String
 
 
+{-| -}
 type Nonce
     = Nonce String
 
 
+{-| -}
 type Connection
     = Connection String
 
 
+{-| -}
 type Prompt
     = Prompt String
 
 
+{-| Create a configuration of the `baseUrl` and the `clientId`.
+-}
 config : String -> ClientId -> Config
 config baseUrl (ClientId clientId) =
     Config
@@ -73,6 +90,24 @@ config baseUrl (ClientId clientId) =
         }
 
 
+{-| Example for a simple **Single Page Application** login flow:
+
+    cfg =
+        Auht0.configure "https://example.auth0.com" (Auth0.ClientId "JCqr28dYqK3pytyN7QxaUn70Uai9TaZx")
+
+    url =
+        Auth0.authorize cfg
+            { responseType = [ Auth0.Token, Auth0.IdToken ]
+            , audience = Nothing
+            , scope = Nothing
+            , state = Nothing
+            , redirectUri = Auth0.RedirectUri "https://example.com/callback"
+            , nonce = Some "123456"
+            , connection = Nothing
+            , prompt = Nothing
+            }
+
+-}
 authorize :
     Config
     ->
@@ -115,10 +150,7 @@ authorize (Config { baseUrl, clientId }) p =
         querys
 
 
-
-{--Helper function --}
-
-
+{-| -}
 type alias CallbackInfo =
     { accessToken : Maybe String
     , expiresIn : Maybe String
@@ -128,6 +160,8 @@ type alias CallbackInfo =
     }
 
 
+{-| Extract informations from callback url
+-}
 parseCallbackUrl : Maybe Url -> CallbackInfo
 parseCallbackUrl url =
     let
