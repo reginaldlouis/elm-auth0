@@ -11,7 +11,7 @@ module Auth0 exposing
     , State(..)
     , authorize
     , config
-    , decode
+    , parseCallbackUrl
     )
 
 import Array
@@ -128,8 +128,8 @@ type alias CallbackInfo =
     }
 
 
-urlCallbackParser : Maybe Url -> CallbackInfo
-urlCallbackParser url =
+parseCallbackUrl : Maybe Url -> CallbackInfo
+parseCallbackUrl url =
     let
         toKeyValue lst =
             lst

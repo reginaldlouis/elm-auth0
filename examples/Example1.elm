@@ -1,10 +1,12 @@
 module Example1 exposing (Model, Msg, init, update, view)
 
 import Auth0
-import Browser
+import Browser exposing (Document, UrlRequest)
+import Browser.Navigation as Nav exposing (Key)
 import Html exposing (Html, a, div, input, span, text)
 import Html.Attributes exposing (href, name, style, target, type_)
 import Html.Events exposing (onCheck, onInput)
+import Url exposing (Url)
 
 
 type alias Model =
@@ -21,11 +23,15 @@ type alias Model =
     , nonce : Maybe Auth0.Nonce
     , connection : Maybe Auth0.Connection
     , prompt : Maybe Auth0.Prompt
+    , key : Key
+    , url : Maybe Url
     }
 
 
 type Msg
     = NoOp
+    | OnUrlRequest UrlRequest
+    | OnUrlChange Url
     | SetBaseUrl String
     | SetClientId String
     | SetAudience String
@@ -42,16 +48,18 @@ type Msg
 
 main : Program () Model Msg
 main =
-    Browser.element
+    Browser.application
         { init = init
         , view = view
         , update = update
         , subscriptions = subscriptions
+        , onUrlRequest = OnUrlRequest
+        , onUrlChange = OnUrlChange
         }
 
 
-init : () -> ( Model, Cmd Msg )
-init _ =
+init : () -> Url -> Key -> ( Model, Cmd Msg )
+init _ url key =
     let
         mdl =
             { cfg = Auth0.config "" (Auth0.ClientId "")
@@ -67,12 +75,14 @@ init _ =
             , nonce = Nothing
             , connection = Nothing
             , prompt = Nothing
+            , key = key
+            , url = Just url
             }
     in
     ( mdl, Cmd.none )
 
 
-view : Model -> Html Msg
+view : Model -> Document Msg
 view model =
     let
         textInput label msg =
@@ -115,32 +125,63 @@ view model =
                 , connection = model.connection
                 , prompt = model.prompt
                 }
-    in
-    div []
-        [ textInput "Base url*" SetBaseUrl
-        , textInput "Client id*" SetClientId
-        , textInput "Audience" SetAudience
-        , textInput "Scope" SetScope
-        , choice "Response Type"
-            [ ( "Code", SetReponseTypeCode )
-            , ( "Token", SetReponseTypeToken )
-            , ( "Id Token", SetReponseTypeIdToken )
-            ]
-        , textInput "State" SetState
-        , textInput "Redirect Uri" SetRedirectUri
-        , textInput "Nonce" SetNonce
-        , textInput "Connection" SetConnection
-        , textInput "Prompt" SetPrompt
-        , div
-            [ style "padding-top" "50px" ]
-            [ text "Generate URL: "
-            , a
-                [ href authUrl
-                , target "_blank"
+
+        inputParameters =
+            div []
+                [ textInput "Base url*" SetBaseUrl
+                , textInput "Client id*" SetClientId
+                , textInput "Audience" SetAudience
+                , textInput "Scope" SetScope
+                , choice "Response Type"
+                    [ ( "Code", SetReponseTypeCode )
+                    , ( "Token", SetReponseTypeToken )
+                    , ( "Id Token", SetReponseTypeIdToken )
+                    ]
+                , textInput "State" SetState
+                , textInput "Redirect Uri" SetRedirectUri
+                , textInput "Nonce" SetNonce
+                , textInput "Connection" SetConnection
+                , textInput "Prompt" SetPrompt
+                , div
+                    [ style "padding-top" "50px" ]
+                    [ text "Auth/login url: "
+                    , a
+                        [ href authUrl
+                        , target "_blank"
+                        ]
+                        [ text authUrl ]
+                    ]
                 ]
-                [ text authUrl ]
-            ]
-        ]
+
+        authCallbackInfo =
+            let
+                callbackInfo =
+                    Auth0.parseCallbackUrl model.url
+
+                s =
+                    span [ style "width" "100px", style "display" "inline-block" ]
+
+                showText txt1 txt2 =
+                    div []
+                        [ s [ text txt1 ]
+                        , s [ text txt2 ]
+                        ]
+
+                default =
+                    Maybe.withDefault "N/A"
+            in
+            div [ style "padding-top" "25px" ]
+                [ showText "Access token: " (callbackInfo.accessToken |> default)
+                , showText "Expires in: " (callbackInfo.expiresIn |> default)
+                , showText "Token Type: " (callbackInfo.tokenType |> default)
+                , showText "Id token: " (callbackInfo.idToken |> default)
+                , showText "Code: " (callbackInfo.code |> default)
+                ]
+
+        body =
+            div [] [ inputParameters, authCallbackInfo ]
+    in
+    Document "" [ body ]
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -148,6 +189,17 @@ update msg model =
     case msg of
         NoOp ->
             ( model, Cmd.none )
+
+        OnUrlRequest urlRequest ->
+            case urlRequest of
+                Browser.Internal url ->
+                    ( model, Nav.pushUrl model.key (Url.toString url) )
+
+                Browser.External href ->
+                    ( model, Nav.load href )
+
+        OnUrlChange url ->
+            ( { model | url = Just url }, Cmd.none )
 
         SetBaseUrl baseUrl ->
             ( { model
