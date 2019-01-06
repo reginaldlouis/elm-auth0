@@ -11,10 +11,13 @@ module Auth0 exposing
     , State(..)
     , authorize
     , config
+    , decode
     )
 
+import Array
 import Url exposing (Url)
 import Url.Builder
+import Url.Extra
 
 
 type Config
@@ -113,7 +116,87 @@ authorize (Config { baseUrl, clientId }) p =
 
 
 
-{--Helper functions --}
+{--Helper function --}
+
+
+type alias CallbackInfo =
+    { accessToken : Maybe String
+    , expiresIn : Maybe String
+    , tokenType : Maybe String
+    , idToken : Maybe String
+    , code : Maybe String
+    }
+
+
+urlCallbackParser : Maybe Url -> CallbackInfo
+urlCallbackParser url =
+    let
+        toKeyValue lst =
+            lst
+                |> List.map (\e -> String.split "=" e |> Array.fromList)
+                |> List.map
+                    (\e ->
+                        ( Array.get 0 e |> Maybe.withDefault ""
+                        , Array.get 1 e |> Maybe.withDefault ""
+                        )
+                    )
+
+        getValue key lst =
+            lst
+                |> List.filter (\( k, v ) -> k == key)
+                |> List.head
+                |> Maybe.map (\x -> Tuple.second x)
+
+        url_ =
+            Maybe.withDefault Url.Extra.empty url
+
+        query =
+            url_.query |> Maybe.withDefault ""
+
+        fragment =
+            url_.fragment |> Maybe.withDefault ""
+
+        qKeyValues =
+            query |> String.split "&" |> toKeyValue
+
+        fKeyValues =
+            fragment |> String.split "&" |> toKeyValue
+
+        getAccessToken =
+            getValue "access_token"
+
+        getExpiresIn =
+            getValue "expires_in"
+
+        getTokenType =
+            getValue "token_type"
+
+        getIdToken =
+            getValue "id_token"
+
+        getCode =
+            getValue "code"
+    in
+    { accessToken = either (getAccessToken qKeyValues) (getAccessToken fKeyValues)
+    , expiresIn = either (getExpiresIn qKeyValues) (getExpiresIn fKeyValues)
+    , tokenType = either (getTokenType qKeyValues) (getTokenType fKeyValues)
+    , idToken = either (getIdToken qKeyValues) (getIdToken fKeyValues)
+    , code = either (getCode qKeyValues) (getCode fKeyValues)
+    }
+
+
+
+{--Utils functions --}
+
+
+either : Maybe a -> Maybe a -> Maybe a
+either left right =
+    case left of
+        Just x ->
+            left
+
+        Nothing ->
+            right
 
 
 audience (Audience a) =
