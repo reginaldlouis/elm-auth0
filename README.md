@@ -6,7 +6,7 @@ Basic login/authorization and other goodies for [Auth0](https://auth0.com).
 
 Example for a simple **Single Page Application** login flow:
 ```
-cfg = Auht0.configure "https://example.auth0.com" (Auth0.ClientId "JCqr28dYqK3pytyN7QxaUn70Uai9TaZx")
+cfg = Auht0.config "https://example.auth0.com" (Auth0.ClientId "JCqr28dYqK3pytyN7QxaUn70Uai9TaZx")
 url =
     Auth0.authorize cfg
         { responseType = [Auth0.Token, Auth0.IdToken]
@@ -20,7 +20,7 @@ url =
         }
 ```
 # Learn more
-To get a deeper understanding of what's going on, read [Auth0 API](https://auth0.com/docs/api/authentication)
+To get a deeper understanding of what's going on, read [Auth0 API](https://auth0.com/docs/api/authentication):
 - Login
     - [Social](https://auth0.com/docs/api/authentication#social)
     - [Database/AD/LDAP (Passive)](https://auth0.com/docs/api/authentication#database-ad-ldap-passive-)
