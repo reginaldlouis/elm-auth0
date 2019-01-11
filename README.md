@@ -9,12 +9,12 @@ Example for a simple **Single Page Application** login flow:
 cfg = Auht0.config "https://example.auth0.com" (Auth0.ClientId "JCqr28dYqK3pytyN7QxaUn70Uai9TaZx")
 url =
     Auth0.authorize cfg
-        { responseType = [Auth0.Token, Auth0.IdToken]
+        { responseType = [ Auth0.Token, Auth0.IdToken ]
         , audience = Nothing
         , scope = Nothing
         , state = Nothing
-        , redirectUri = Auth0.RedirectUri "https://example.com/callback"
-        , nonce = Some "123456"
+        , redirectUri = Just <| Auth0.RedirectUri "https://example.com/callback"
+        , nonce = Just <| Auth0.Nonce "123456"
         , connection = Nothing
         , prompt = Nothing
         }

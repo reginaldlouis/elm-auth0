@@ -101,8 +101,8 @@ config baseUrl (ClientId clientId) =
             , audience = Nothing
             , scope = Nothing
             , state = Nothing
-            , redirectUri = Auth0.RedirectUri "https://example.com/callback"
-            , nonce = Some "123456"
+            , redirectUri = Just <| Auth0.RedirectUri "https://example.com/callback"
+            , nonce = Just <| Auth0.Nonce "123456"
             , connection = Nothing
             , prompt = Nothing
             }
