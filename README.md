@@ -6,7 +6,7 @@ Basic login/authorization and other goodies for [Auth0](https://auth0.com).
 
 Example for a simple **Single Page Application** login flow:
 ```
-cfg = Auht0.config "https://example.auth0.com" (Auth0.ClientId "JCqr28dYqK3pytyN7QxaUn70Uai9TaZx")
+cfg = Auht0.config "https://example.auth0.com" (Auth0.ClientId "<clientId>")
 url =
     Auth0.authorize cfg
         { responseType = [ Auth0.Token, Auth0.IdToken ]
